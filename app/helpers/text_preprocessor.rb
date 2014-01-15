@@ -12,6 +12,7 @@ class TextPreprocessor
     operations.each do |operation|
       send(operation) if respond_to?(operation)
     end
+    @text
   end
 
   def strip_tags

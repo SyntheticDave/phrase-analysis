@@ -1,0 +1,33 @@
+%h2 I'm in the view!
+%form{ action: 'analysis', method: 'post' }
+  %fieldset
+    %label
+      Text:
+      %textarea{ name: 'text' }
+
+  %fieldset
+    %p Counter Options
+    %label.select
+      Min Phrase Length:
+      %select{name: 'options[counter][min_length]'}
+        -(1..10).each do |i|
+          %option{value: i}= i
+
+    %label.select
+      Max Phrase Length:
+      %select{name: 'options[counter][max_length]'}
+        -(1..10).each do |i|
+          %option{value: i}= i
+
+  %fieldset
+    %p Preprocessor Options
+    %label.checkbox
+      Strip Tags:
+      %input{ type: 'checkbox', name: 'options[preprocessor][strip_tags]', id: 'options_preprocessor_strip_tags', value: 1, checked: true }
+
+    %label.checkbox
+      Strip Punctuation
+      %input{ type: 'checkbox', name: 'options[preprocessor][strip_punctuation]', value: 1, checked: true }
+
+  %fieldset
+    %input{type: 'submit', value: 'Analyse!'}

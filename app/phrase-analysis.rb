@@ -1,5 +1,15 @@
 require 'sinatra'
+require './app/phrase_analyser'
+require 'pry'
 
 get '/' do
-  'At some point, this will allow you to paste text into a text area, and analyse it.'
+  haml :index
+end
+
+post '/analysis' do
+  options = { counter: params[:options][:counter], preprocessor: params[:options][:preprocessor] }
+  text = params[:text]
+
+  analyser = PhraseAnalyser.new(text, options)
+  haml :analysis, locals: { analyser: analyser }
 end
