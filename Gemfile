@@ -8,7 +8,10 @@ gem 'haml'
 gem 'thin'
 
 # Testing
-gem 'rspec'
+group :test do
+  gem 'rspec'
+  gem 'simplecov', :require => false
+end
 
 # Debugging
-gem 'pry'
+gem 'pry', group: [:development, :test]

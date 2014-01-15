@@ -1,13 +1,12 @@
-require './app/helpers/text_preprocessor'
 require 'spec_helper'
+require './app/helpers/text_preprocessor'
 
 describe TextPreprocessor do
   let(:text_pp) { TextPreprocessor.new(test_text) }
+  let(:test_text) { 'This is a test string.' }
 
   describe '.initialize' do
     context 'when passed a string' do
-      let(:test_text) { 'This is a test string.' }
-
       it 'assigns its argument string' do
         expect(text_pp.text).to eq(test_text)
       end
@@ -54,5 +53,24 @@ describe TextPreprocessor do
 
       it { should include '-' }
     end
+  end
+
+  describe '#perform' do
+    context 'given known operations' do
+      let(:operations) { [:strip_tags, :strip_punctuation] }
+      it 'calls each operation' do
+        text_pp.should_receive(:strip_tags)
+        text_pp.should_receive(:strip_punctuation)
+
+        text_pp.perform(operations)
+      end
+    end
+    context 'given unknown operations' do
+      let(:operations) { [:unknown_operation] }
+      it 'does not raise an error' do
+        expect { text_pp.perform }.to_not raise_error
+      end
+    end
+
   end
 end

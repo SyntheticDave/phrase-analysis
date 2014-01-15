@@ -10,7 +10,6 @@ class TextPreprocessor
   # quick way to perform multiple operations
   def perform(operations=[])
     operations.each do |operation|
-      p "Operation: #{operation}"
       self.send(operation) if self.respond_to?(operation)
     end
   end
