@@ -1,8 +1,8 @@
 class PhraseCounter
-  attr_accessor :text_array, :phrases
+  attr_accessor :phrases
 
-  def initialize(text, options={min_phrase_length: 3, max_phrase_length: 4})
-    @text_array = text.downcase.split(/\s/)
+  def initialize(text, options={min_phrase_length: 3, max_phrase_length: 3})
+    @text_array = text.downcase.split(/\s+/)
     set_options(options)
     @phrases = {}
   end
