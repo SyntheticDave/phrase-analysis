@@ -1,0 +1,12 @@
+%h3="All Phrases of length #{length}"
+%p="Unique phrase count: #{results.count}"
+%table
+  %tr
+    %th Text
+    %th Occurrances
+
+  -results.each do |text, count|
+    - break if count < hide_less_than
+    %tr
+      %td=text
+      %td=count

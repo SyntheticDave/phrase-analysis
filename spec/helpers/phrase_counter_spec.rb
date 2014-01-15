@@ -3,26 +3,26 @@ require './app/helpers/phrase_counter'
 
 describe PhraseCounter do
   let(:test_text) { '' }
-  let(:options)   { { min_phrase_length: 3, max_phrase_length: 3 } }
+  let(:options)   { { min_length: 3, max_length: 3 } }
   let(:pc)        { PhraseCounter.new(test_text, options) }
 
   describe '#phrase_options' do
     describe 'phrase length' do
-      subject { pc.phrase_options(options)[:phrase_length_range] }
+      subject { pc.phrase_options(options)[:length_range] }
       context 'only min phrase length passed' do
-        let(:options) { { min_phrase_length: 2 } }
+        let(:options) { { min_length: 2 } }
         it 'uses min as both min and max of range' do
           expect(subject).to eq(2..2)
         end
       end
       context 'only max phrase length passed' do
-        let(:options) { { max_phrase_length: 6 } }
+        let(:options) { { max_length: 6 } }
         it 'uses max as both min and max of range' do
           expect(subject).to eq(6..6)
         end
       end
       context 'both min and max passed' do
-        let(:options) { { min_phrase_length: 3, max_phrase_length: 6 } }
+        let(:options) { { min_length: 3, max_length: 6 } }
         it 'uses both min and max of range' do
           expect(subject).to eq(3..6)
         end
@@ -51,7 +51,7 @@ describe PhraseCounter do
 
     describe 'each_phrase' do
       context 'given a range of 3..6' do
-        let(:options)   { { min_phrase_length: 3, max_phrase_length: 6 } }
+        let(:options)   { { min_length: 3, max_length: 6 } }
         it 'calls each_phrase with each in range' do
           pc.should_receive(:each_phrase).with(3).ordered
           pc.should_receive(:each_phrase).with(4).ordered
@@ -64,7 +64,7 @@ describe PhraseCounter do
     end
 
     describe 'phrases[3]' do
-      let(:options)       { { min_phrase_length: 3 } }
+      let(:options)       { { min_length: 3 } }
       let(:expected_keys) do
         ['this phrase has', 'phrase has some', 'has some text',
          'some text then', 'text then repeats', 'then repeats phrase',
@@ -81,7 +81,7 @@ describe PhraseCounter do
       describe 'value' do
         context 'for phrases that do not occur' do
           subject { pc.phrases[3]['not in string'] }
-          it { should eq 0 }
+          it { should be_nil }
         end
 
         context 'for phrases occurring once' do
@@ -94,6 +94,14 @@ describe PhraseCounter do
           it { should eq 2 }
         end
       end
+    end
+  end
+
+  describe '#word_count' do
+    context 'given a string of 5 words' do
+      let(:test_text) { '1 2 3 4 5' }
+      subject         { pc.word_count }
+      it { should eq 5 }
     end
   end
 end

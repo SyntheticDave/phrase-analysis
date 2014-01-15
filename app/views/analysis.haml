@@ -1,7 +1,11 @@
 - require 'pry'
 
 %h2 Analysis Results
-%h3 Text
-= analyser.text
-%h3 Results
-= analyser.analysis.inspect
+%h3 Total Word Count
+= analyser.word_count
+
+- if analyser.hide_less_than > 0
+  %p="Hiding all phrases with occurrances less than: #{analyser.hide_less_than}"
+
+- analyser.analysis.each do |length, results|
+  =render :haml,  :'analysis/single_phrase_length', locals: { length: length, results: results, hide_less_than: analyser.hide_less_than }

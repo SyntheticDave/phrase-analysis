@@ -20,6 +20,6 @@ class TextPreprocessor
   end
 
   def strip_punctuation
-    @text.tap { |text| text.gsub!(/[\.,!\?"']+/, '') }
+    @text.tap { |text| text.gsub!(/[\.,!;\\\/\?"'“”]+/, '') }
   end
 end

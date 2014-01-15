@@ -22,6 +22,10 @@ class PhraseCounter
     @options
   end
 
+  def word_count
+    @word_count ||= @text_array.count
+  end
+
   # Performs the phrase counting
   def perform
     phrase_options[:length_range].each do |length|
@@ -29,6 +33,8 @@ class PhraseCounter
       each_phrase(length) do |phrase|
         @phrases[length][phrase] += 1
       end
+      # Sort by value descending
+      @phrases[length] = Hash[@phrases[length].sort_by{|_, v| v}.reverse]
     end
     @phrases
   end

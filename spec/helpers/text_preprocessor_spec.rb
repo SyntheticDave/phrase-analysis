@@ -42,7 +42,7 @@ describe TextPreprocessor do
     end
 
     context 'with punctuation to strip' do
-      let(:test_text) { 'This !? string, has .some "punctuation"\' Also a hyphenated-word.' }
+      let(:test_text) { 'This !? string, has .some "punctuation"\' /Also\ a hyphenated-word.' }
 
       it { should_not include '?' }
       it { should_not include'.' }
@@ -50,6 +50,11 @@ describe TextPreprocessor do
       it { should_not include',' }
       it { should_not include'"' }
       it { should_not include'\'' }
+      it { should_not include'\\' }
+      it { should_not include'/' }
+      it { should_not include'“' }
+      it { should_not include'”' }
+
 
       it { should include '-' }
     end

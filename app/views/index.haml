@@ -20,6 +20,15 @@
           %option{value: i}= i
 
   %fieldset
+    %p Display Options
+    %p
+    %label.text
+      Hide phrases with less than
+      %input{ type: 'text', name: 'options[display][hide_less_than]' }
+      occurances
+
+
+  %fieldset
     %p Preprocessor Options
     %label.checkbox
       Strip Tags:
