@@ -3,29 +3,28 @@ require './app/helpers/phrase_counter'
 
 describe PhraseCounter do
   let(:test_text) { '' }
-  let(:options)   { {min_phrase_length: 3, max_phrase_length: 3} }
+  let(:options)   { { min_phrase_length: 3, max_phrase_length: 3 } }
   let(:pc)        { PhraseCounter.new(test_text, options) }
 
-  describe '#set_options' do
-    subject { pc.set_options(options) }
-
+  describe '#phrase_options' do
     describe 'phrase length' do
+      subject { pc.phrase_options(options)[:phrase_length_range] }
       context 'only min phrase length passed' do
         let(:options) { { min_phrase_length: 2 } }
         it 'uses min as both min and max of range' do
-          expect(subject).to eq (2..2)
+          expect(subject).to eq(2..2)
         end
       end
       context 'only max phrase length passed' do
         let(:options) { { max_phrase_length: 6 } }
         it 'uses max as both min and max of range' do
-          expect(subject).to eq (6..6)
+          expect(subject).to eq(6..6)
         end
       end
       context 'both min and max passed' do
         let(:options) { { min_phrase_length: 3, max_phrase_length: 6 } }
         it 'uses both min and max of range' do
-          expect(subject).to eq (3..6)
+          expect(subject).to eq(3..6)
         end
       end
     end
@@ -33,13 +32,16 @@ describe PhraseCounter do
 
   describe '.each_phrase' do
     context 'argument length of 1' do
-      let(:test_text)       { 'This gives 6 of length 1' }
-      let(:expected_yields) { ["this", "gives", "6", "of", "length", "1"] }
+      let(:test_text)       { 'this gives 6 of length 1' }
+      let(:expected_yields) { test_text.split(/\s/) }
       specify { expect { |b| pc.each_phrase(1, &b) }.to yield_successive_args(*expected_yields) }
     end
     context 'argument length of 3' do
-      let(:test_text)       { 'This gives 4 of length 3' }
-      let(:expected_yields) { ["this gives 4", "gives 4 of", "4 of length", "of length 3"] }
+      let(:test_text)       { 'this gives 4 of length 3' }
+      let(:expected_yields) do
+        ['this gives 4', 'gives 4 of',
+         '4 of length', 'of length 3']
+      end
       specify { expect { |b| pc.each_phrase(3, &b) }.to yield_successive_args(*expected_yields) }
     end
   end
@@ -63,7 +65,12 @@ describe PhraseCounter do
 
     describe 'phrases[3]' do
       let(:options)       { { min_phrase_length: 3 } }
-      let(:expected_keys) { ['this phrase has', 'phrase has some', 'has some text', 'some text then', 'text then repeats', 'then repeats phrase', 'repeats phrase has'] }
+      let(:expected_keys) do
+        ['this phrase has', 'phrase has some', 'has some text',
+         'some text then', 'text then repeats', 'then repeats phrase',
+         'repeats phrase has'
+        ]
+      end
       before              { pc.perform }
       subject             { pc.phrases[3] }
 

@@ -8,9 +8,9 @@ class TextPreprocessor
   end
 
   # quick way to perform multiple operations
-  def perform(operations=[])
+  def perform(operations = [])
     operations.each do |operation|
-      self.send(operation) if self.respond_to?(operation)
+      send(operation) if respond_to?(operation)
     end
   end
 
