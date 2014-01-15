@@ -9,7 +9,10 @@ class PhraseCounter
 
   # Set the options for the phrase counter (e.g. min words per phrase, max words per phrase)
   def set_options(options)
-    @phrase_length_range = options[:min_phrase_length]..options[:max_phrase_length]
+    min_length = options[:min_phrase_length] || options[:max_phrase_length]
+    max_length = options[:max_phrase_length] || options[:min_phrase_length]
+
+    @phrase_length_range = min_length..max_length
   end
 
   # Performs the phrase counting
@@ -17,7 +20,6 @@ class PhraseCounter
     @phrase_length_range.each do |length|
       @phrases[length] = Hash.new(0) # Default each phrase to zero occurances
       each_phrase(length) do |phrase|
-        p phrase
         @phrases[length][phrase] += 1
       end
     end
