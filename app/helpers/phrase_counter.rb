@@ -9,16 +9,29 @@ class PhraseCounter
     @text_array = text.downcase.split(/\s+/)
     phrase_options(options)
     @phrases = {}
+
+    # Used to keep track of multiple phrase matches in a row, to find longer phrases
+    @running_phrases = []
+
+    # Keeps track of component phrases, to be removed after a pass is completed
+    @component_phrases = Hash.new(0)
   end
 
   # Set the options for the phrase counter (e.g. min words per phrase)
   def phrase_options(new_options = nil)
     @options ||= {}
     return @options unless new_options
+
+    # Set phrase length range
     min_length = new_options[:min_length] || new_options[:max_length]
     max_length = new_options[:max_length] || new_options[:min_length]
 
-    @options[:length_range] = min_length..max_length
+    @options[:length_range] = (min_length.to_i)..(max_length.to_i)
+
+    # set longer phrase options
+    @options[:look_longer] = new_options[:look_longer]
+    @options[:hide_longer] = new_options[:hide_longer]
+
     @options
   end
 
@@ -29,14 +42,47 @@ class PhraseCounter
   # Performs the phrase counting
   def perform
     phrase_options[:length_range].each do |length|
-      @phrases[length] = Hash.new(0) # Default each phrase to zero occurances
+      @phrases[length] ||= Hash.new(0) # Default each phrase to zero occurances
       each_phrase(length) do |phrase|
+        running_phrase_check(length, phrase) if @options[:look_longer]
         @phrases[length][phrase] += 1
       end
+
+      # Make sure last phrase in length is checked for presence of longer phrases
+      running_phrase_check(length, '') if @options[:look_longer]
+      remove_component_phrases(length) if @options[:hide_longer]
+
       # Sort by value descending
-      @phrases[length] = Hash[@phrases[length].sort_by{|_, v| v}.reverse]
+      @phrases[length] = Hash[@phrases[length].sort_by{|_, occurances| occurances}.reverse]
     end
-    @phrases
+    @phrases = Hash[@phrases.sort_by{|length, _| length}]
+  end
+
+  # Keeps a running list of sequentially matching phrases, to find longer phrases than currently being checked for
+  def running_phrase_check(length, phrase)
+    # Check if this phrase has been found before
+    if @phrases[length][phrase] > 0
+      @running_phrases << phrase
+    else # Not found, so we are at the end of any longer phrase (if one exists)
+      if @running_phrases.count > 1
+        # Found more than one matching phrase in a row
+        record_longer_phrase
+      end
+      @running_phrases.clear
+    end
+  end
+
+  # Compiles component phrases into their complete phrase, and records in result set
+  def record_longer_phrase
+    compiled_phrase = compile_phrase
+    compiled_phrase_length = phrase_length(compiled_phrase)
+    @phrases[compiled_phrase_length] ||= Hash.new(0)
+
+    # The first duplicate we find needs to record both occurrances
+    # TODO: Clean this up. Absolute mother to read
+    new_occurrances = @phrases[compiled_phrase_length][compiled_phrase] > 0 ? 1 : 2
+    @phrases[compiled_phrase_length][compiled_phrase] += new_occurrances
+    record_component_phrases(new_occurrances) if @options[:hide_longer]
   end
 
   # Iterates over the words array, and returns each phrase of agument length
@@ -46,5 +92,51 @@ class PhraseCounter
     (0..max_index).each  do |index|
       yield @text_array.slice(index, length).join(' ')
     end
+  end
+
+  # Compiles phrase components into their complete phrase
+  # Returns the compiled phrase and its length
+  def compile_phrase
+    # Make sure we dup the value, so we don't alter @running_phrases
+    compiled_phrase = @running_phrases.first.dup
+
+    additional_running_phrases = []
+    @running_phrases.each do |component_phrase|
+      next if compiled_phrase == component_phrase
+      compiled_phrase << ' ' + component_phrase.split(' ').last
+      additional_running_phrases << compiled_phrase.dup
+    end
+
+    # Remove the last phrase added to @additional_running_phrases, as it is the entire phrase
+    additional_running_phrases.pop
+    @running_phrases = @running_phrases + additional_running_phrases
+
+    compiled_phrase
+  end
+
+  # Records an additional argument occurrances to the component phrases (for removal from main phrases)
+  def record_component_phrases(occurrances)
+    @running_phrases.each do |component_phrase|
+      @component_phrases[component_phrase] += occurrances
+    end
+  end
+
+  # Called after compiling smaller phrases into a longer one, to remove the component phrases from
+  # the result set
+  def remove_component_phrases(length)
+    @component_phrases.each do |phrase, occurances|
+      component_phrase_length = phrase_length(phrase)
+
+      if @phrases[component_phrase_length] && @phrases[component_phrase_length][phrase]
+        @phrases[component_phrase_length][phrase] -= occurances
+        @phrases[component_phrase_length].delete(phrase) if phrases[component_phrase_length][phrase] <= 0
+      end
+    end
+  end
+
+  # Returns the number of words in a phrase
+  # TODO: Move this somewhere better
+  def phrase_length(phrase)
+    phrase.split(' ').count
   end
 end

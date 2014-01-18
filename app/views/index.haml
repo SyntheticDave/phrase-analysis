@@ -19,6 +19,16 @@
         -(1..10).each do |i|
           %option{value: i}= i
 
+    %fieldset
+      %label.checkbox
+        Look for longer phrases:
+        %input{ type: 'checkbox', name: 'options[counter][look_longer]', id: 'options_preprocessor_strip_tags', value: 1, checked: true }
+
+      %label.checkbox
+        Hide longer phrases from regular results:
+        %input{ type: 'checkbox', name: 'options[counter][hide_longer]', id: 'options_preprocessor_strip_tags', value: 1, checked: true }
+
+
   %fieldset
     %p Display Options
     %p
