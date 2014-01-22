@@ -27,6 +27,8 @@ class PhraseCounter
     max_length = new_options[:max_length] || new_options[:min_length]
 
     @options[:length_range] = (min_length.to_i)..(max_length.to_i)
+    @options[:min_length] = min_length.to_i
+    @options[:max_length] = max_length.to_i
 
     # set longer phrase options
     @options[:look_longer] = new_options[:look_longer]
@@ -44,18 +46,23 @@ class PhraseCounter
     phrase_options[:length_range].each do |length|
       @phrases[length] ||= Hash.new(0) # Default each phrase to zero occurances
       each_phrase(length) do |phrase|
-        running_phrase_check(length, phrase) if @options[:look_longer]
+        running_phrase_check(length, phrase) if @options[:look_longer] && (length == @options[:max_length])
         @phrases[length][phrase] += 1
       end
 
-      # Make sure last phrase in length is checked for presence of longer phrases
-      running_phrase_check(length, '') if @options[:look_longer]
-      remove_component_phrases(length) if @options[:hide_longer]
+      # Check for presence of longer phrases only on last pass
+      running_phrase_check(length, '') if @options[:look_longer] && (length == @options[:max_length])
+    end
 
-      # Sort by value descending
+    remove_component_phrases if @options[:hide_longer]
+    sort_phrases
+  end
+
+  def sort_phrases
+    @phrases = Hash[@phrases.sort_by{|length, _| length}]
+    @phrases.each do |length, phrases|
       @phrases[length] = Hash[@phrases[length].sort_by{|_, occurances| occurances}.reverse]
     end
-    @phrases = Hash[@phrases.sort_by{|length, _| length}]
   end
 
   # Keeps a running list of sequentially matching phrases, to find longer phrases than currently being checked for
@@ -79,18 +86,18 @@ class PhraseCounter
     @phrases[compiled_phrase_length] ||= Hash.new(0)
 
     # The first duplicate we find needs to record both occurrances
-    # TODO: Clean this up. Absolute mother to read
+    # TODO: Clean this up. Absolute mother to read.
     new_occurrances = @phrases[compiled_phrase_length][compiled_phrase] > 0 ? 1 : 2
     @phrases[compiled_phrase_length][compiled_phrase] += new_occurrances
-    record_component_phrases(new_occurrances) if @options[:hide_longer]
   end
 
-  # Iterates over the words array, and returns each phrase of agument length
-  def each_phrase(length)
+  # Iterates over the text array, and returns each phrase of agument length
+  def each_phrase(length, text_array=nil)
+    text_array ||= @text_array
     length = length.to_i
-    max_index = @text_array.length - length
+    max_index = text_array.length - length
     (0..max_index).each  do |index|
-      yield @text_array.slice(index, length).join(' ')
+      yield text_array.slice(index, length).join(' ')
     end
   end
 
@@ -100,36 +107,35 @@ class PhraseCounter
     # Make sure we dup the value, so we don't alter @running_phrases
     compiled_phrase = @running_phrases.first.dup
 
-    additional_running_phrases = []
     @running_phrases.each do |component_phrase|
       next if compiled_phrase == component_phrase
       compiled_phrase << ' ' + component_phrase.split(' ').last
-      additional_running_phrases << compiled_phrase.dup
     end
-
-    # Remove the last phrase added to @additional_running_phrases, as it is the entire phrase
-    additional_running_phrases.pop
-    @running_phrases = @running_phrases + additional_running_phrases
 
     compiled_phrase
   end
 
-  # Records an additional argument occurrances to the component phrases (for removal from main phrases)
-  def record_component_phrases(occurrances)
-    @running_phrases.each do |component_phrase|
-      @component_phrases[component_phrase] += occurrances
+  def remove_component_phrases
+    @phrases = Hash[@phrases.sort_by{|length, _| length}.reverse]
+    @phrases.each do |length, phrases|
+      phrases.each do |phrase, occurrances|
+        remove_component_phrase(phrase, length, occurrances) if occurrances > 1
+      end
     end
   end
 
-  # Called after compiling smaller phrases into a longer one, to remove the component phrases from
-  # the result set
-  def remove_component_phrases(length)
-    @component_phrases.each do |phrase, occurances|
-      component_phrase_length = phrase_length(phrase)
+  def remove_component_phrase(phrase, length, occurrances)
+    (@options[:min_length]..(length - 1)).each do |component_length|
+      return unless @phrases[component_length]
 
-      if @phrases[component_phrase_length] && @phrases[component_phrase_length][phrase]
-        @phrases[component_phrase_length][phrase] -= occurances
-        @phrases[component_phrase_length].delete(phrase) if phrases[component_phrase_length][phrase] <= 0
+      phrase_array = phrase.split(' ')
+
+      each_phrase(component_length, phrase_array) do |component_phrase|
+        if @phrases[component_length][component_phrase]
+          # p "Removing #{occurrances} occurrances of '#{component_phrase}' from results"
+          @phrases[component_length][component_phrase] -= occurrances
+          @phrases[component_length].delete(component_phrase) if @phrases[component_length][component_phrase] <= 0
+        end
       end
     end
   end
