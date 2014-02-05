@@ -1,6 +1,5 @@
 require 'sinatra'
 require './app/phrase_analyser'
-require 'pry'
 
 get '/' do
   haml :index

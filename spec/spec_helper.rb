@@ -30,3 +30,7 @@ end
 
 # For your debugging pleasure
 require 'pry'
+
+# Make sure all extension methods are loaded (includes monkey patches)
+# TODO: Can we rely on Dir.pwd?
+p Dir[Dir.pwd + '/extensions/**/*.rb'].each { |file| require file }
