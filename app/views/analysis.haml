@@ -6,7 +6,8 @@
   %p="Hiding all phrases with occurrances less than: #{analyser.hide_less_than}"
 
 - analyser.analysis.each do |length, results|
-  =render :haml,  :'analysis/single_phrase_length', locals: { length: length, results: results, hide_less_than: analyser.hide_less_than }
+  - if results.count > 0
+    =render :haml,  :'analysis/single_phrase_length', locals: { length: length, results: results, hide_less_than: analyser.hide_less_than }
 
 %h3 Processed Text
 .text
